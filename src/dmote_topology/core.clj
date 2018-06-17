@@ -3,6 +3,7 @@
 (ns dmote-topology.core
   (:require [clojure.string :as string]
             [clojure.tools.cli :refer [parse-opts]]
+            [environ.core :refer [env]]
             [unicode-math.core :refer :all])
   (:gen-class :main true))
 
@@ -39,10 +40,15 @@
              (+ (* inverted (- peak1 trough1)) trough1))))))))
 
 (defn print-matrix
-  "Print a 2D matrix in the format expected by OpenSCAD’s surface()."
-  [{widest :z-extent precision :precision} matrix]
-  (let [width (+ (count (str (int widest))) precision 1)
+  "Print a 2D matrix in the format expected by OpenSCAD’s surface(),
+  with information about the source."
+  [options matrix]
+  (let [{widest :z-extent precision :precision} options
+        width (+ (count (str (int widest))) precision 1)
         template (str "%" width "." precision "f")]
+    (println (format "# Generated with dmote-topology, version %s, settings %s."
+                     (env :dmote-topology-version)
+                     (into (sorted-map) options)))
     (doseq [line matrix]
       (println (string/join " " (map #(format template %) line))))))
 

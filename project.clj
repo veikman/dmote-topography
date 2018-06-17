@@ -5,7 +5,9 @@
             :url "https://www.gnu.org/licenses/gpl.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.3.7"]
-                 [unicode-math "0.2.1"]]
+                 [unicode-math "0.2.1"]
+                 [environ "1.1.0"]]
+  :plugins [[lein-environ "1.1.0"]]
   :main ^:skip-aot dmote-topology.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

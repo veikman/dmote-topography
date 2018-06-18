@@ -15,7 +15,7 @@
        (ⁿ e (- (/ (ⁿ (- x ￼￼μ) 2) (* 2 v)))))))
 
 (defn make-matrix
-  "Produce a matrix based on a bivariate normal distribution."
+  "Produce a matrix based on a simplified bivariate normal distribution."
   [{x-extent :x-extent y-extent :y-extent
     cx :x-c μx :x-mu σx :x-sigma
     cy :y-c μy :y-mu σy :y-sigma}]
@@ -50,7 +50,7 @@
                      (env :dmote-topology-version)
                      (into (sorted-map) options)))
     (doseq [line matrix]
-      (println (string/join " " (map #(format template %) line))))))
+      (println (string/join " " (map #(format template (double %)) line))))))
 
 (def cli-options
   "Define command-line interface."
@@ -66,7 +66,7 @@
     :default 1 :parse-fn #(Float/parseFloat %)]
    [nil "--x-mu N" "μ (midpoint) of 𝒩 on x axis"
     :default 0 :parse-fn #(Float/parseFloat %)]
-   [nil "--x-sigma N" "σ (sharpness) of 𝒩 on x axis"
+   [nil "--x-sigma N" "σ (softness) of 𝒩 on x axis"
     :default 1 :parse-fn #(Float/parseFloat %)]
    [nil "--y-c N" "Coefficient of 𝒩 on y axis"
     :default 1 :parse-fn #(Float/parseFloat %)]

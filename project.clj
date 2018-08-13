@@ -1,5 +1,5 @@
-(defproject dmote-topology "0.1.0-SNAPSHOT"
-  :description "DMOTE wrist rest topology generator"
+(defproject dmote-topography "0.1.0-SNAPSHOT"
+  :description "DMOTE wrist rest topography generator"
   :url "http://viktor.eikman.se/article/the-dmote/"
   :license {:name "GPL"
             :url "https://www.gnu.org/licenses/gpl.html"}
@@ -9,6 +9,6 @@
                  [unicode-math "0.2.1"]
                  [environ "1.1.0"]]
   :plugins [[lein-environ "1.1.0"]]
-  :main ^:skip-aot dmote-topology.core
+  :main ^:skip-aot dmote-topography.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

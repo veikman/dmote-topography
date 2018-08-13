@@ -1,13 +1,13 @@
-# DMOTE wrist rest topology generator
+# DMOTE wrist rest topography generator
 
-This is a CLI script which will output a three-dimensional topology in the
+This is a CLI script which will output a three-dimensional topography in the
 simple format expected by the `surface()` function in
 [OpenSCAD](http://www.openscad.org/).
 
 It is intended to be used with the DMOTE keyboard project, specifically in
 generating the surface of a wrist rest to be cast in a soft material.
 
-Because a wrist rest should have fairly smooth organic curves, the topology
+Because a wrist rest should have fairly smooth organic curves, the topography
 is based on a [bivariate normal distribution
 function](https://en.wikipedia.org/wiki/Multivariate_normal_distribution)
 multiplied by a logarithmic mound shape.

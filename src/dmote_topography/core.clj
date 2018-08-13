@@ -1,6 +1,6 @@
-;;; A two-dimensional topology generator for use with OpenSCAD.
+;;; A two-dimensional topography generator for use with OpenSCAD.
 
-(ns dmote-topology.core
+(ns dmote-topography.core
   (:require [clojure.string :as string]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.core.matrix :as mtrx]
@@ -68,8 +68,8 @@
   (let [{widest :z-extent precision :precision} options
         width (+ (count (str (int widest))) precision 1)
         template (str "%" width "." precision "f")]
-    (println (format "# Generated with dmote-topology, version %s, settings %s."
-                     (env :dmote-topology-version)
+    (println (format "# Generated with dmote-topography, version %s, settings %s."
+                     (env :dmote-topography-version)
                      (into (sorted-map) options)))
     (doseq [line matrix]
       (println (string/join " " (map #(format template (double %)) line))))))

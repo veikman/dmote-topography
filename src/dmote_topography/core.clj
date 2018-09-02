@@ -17,13 +17,30 @@
 
 ;; Matrix functions:
 
-(defn normal-distributions
+(defn- normals
   "Produce a matrix based on a simplified bivariate normal distribution."
-  [{x-extent :x-extent y-extent :y-extent
-    cx :x-c μx :x-mu σx :x-sigma
-    cy :y-c μy :y-mu σy :y-sigma}]
+  [op cx μx σx cy μy σy {x-extent :x-extent y-extent :y-extent}]
   (mtrx/compute-matrix [x-extent y-extent]
-    (fn [y x] (+ (* cx (𝒩 x μx σx)) (* cy (𝒩 y μy σy))))))
+    (fn [y x] (op (* cx (𝒩 x μx σx)) (* cy (𝒩 y μy σy))))))
+
+(defn straight-normal-distributions
+  [options]
+  (let [{cx :x-c μx :x-mu σx :x-sigma
+         cy :y-c μy :y-mu σy :y-sigma} options]
+    (normals * cx μx σx cy μy σy options)))
+
+(defn inverted-normal-distributions
+  [options]
+  (let [{include :i-include x-extent :x-extent y-extent :y-extent} options
+        {cx :i-x-c μx :i-x-mu σx :i-x-sigma} options
+        {cy :i-y-c μy :i-y-mu σy :i-y-sigma} options]
+    (if include
+      (normals + cx μx σx cy μy σy options)
+      (mtrx/zero-array [x-extent y-extent]))))
+
+(defn scale-inverted
+  [{factor :i-c} matrix]
+  (mtrx/mul factor matrix))
 
 (defn pillow
   "A 2D array that rises to a gentle peak. A four-way product of
@@ -41,12 +58,15 @@
        (fn [y x] (- y-extent y))])))
 
 (defn unit-scale
-  "Normalize all elements of a matrix to unit scale, 0-1."
+  "Normalize all elements of a matrix to unit scale, 0-1.
+  If no differences exist, return all zeroes."
   [matrix]
   (let [peak (mtrx/emax matrix)
         trough (mtrx/emin matrix)
         Δ (- peak trough)]
-   (mtrx/emap (fn [v] (/ (- v trough) Δ)) matrix)))
+    (if (zero? Δ)
+      (mtrx/zero-array (mtrx/shape matrix))
+      (mtrx/emap (fn [v] (/ (- v trough) Δ)) matrix))))
 
 (defn invert
   "Invert all values of a unit-scaled matrix."
@@ -75,9 +95,14 @@
       (println (string/join " " (map #(format template (double %)) line))))))
 
 (defn make-matrix [options]
-  (->> (normal-distributions options)
+  (->> (straight-normal-distributions options)
        (unit-scale)
-       (invert)
+       (mtrx/add
+         (->> (inverted-normal-distributions options)
+              (invert)
+              (unit-scale)
+              (scale-inverted options)))
+       (unit-scale)
        (mtrx/emul (unit-scale (pillow options)))
        (normalize options)
        (print-matrix options)))
@@ -103,6 +128,22 @@
    [nil "--y-mu N" "μ of 𝒩 on y axis"
     :default 0.0 :parse-fn #(Float/parseFloat %)]
    [nil "--y-sigma N" "σ of 𝒩 on y axis"
+    :default 1.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-include" "Include inverted 𝒩"
+    :default false]
+   [nil "--i-c N" "Coefficient of inverted 𝒩 versus basic 𝒩"
+    :default 1.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-x-c N" "Coefficient of inverted 𝒩 on x axis"
+    :default 1.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-x-mu N" "μ (midpoint) of inverted 𝒩 on x axis"
+    :default 0.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-x-sigma N" "σ (softness) of inverted 𝒩 on x axis"
+    :default 1.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-y-c N" "Coefficient of inverted 𝒩 on y axis"
+    :default 1.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-y-mu N" "μ of inverted 𝒩 on y axis"
+    :default 0.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--i-y-sigma N" "σ of inverted 𝒩 on y axis"
     :default 1.0 :parse-fn #(Float/parseFloat %)]
    ["-p" "--precision N" "Printing precision in final result"
     :default 2 :parse-fn #(Integer/parseInt %)]

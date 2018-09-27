@@ -23,13 +23,13 @@
   (mtrx/compute-matrix [x-extent y-extent]
     (fn [y x] (op (* cx (𝒩 x μx σx)) (* cy (𝒩 y μy σy))))))
 
-(defn straight-normal-distributions
+(defn multiplied-normal-distributions
   [options]
   (let [{cx :x-c μx :x-mu σx :x-sigma
          cy :y-c μy :y-mu σy :y-sigma} options]
     (normals * cx μx σx cy μy σy options)))
 
-(defn inverted-normal-distributions
+(defn additive-normal-distributions
   [options]
   (let [{include :i-include x-extent :x-extent y-extent :y-extent} options
         {cx :i-x-c μx :i-x-mu σx :i-x-sigma} options
@@ -49,13 +49,24 @@
   [{x-extent :x-extent y-extent :y-extent}]
   (apply mtrx/emul
     (reduce
-      (fn [coll f] (conj coll (mtrx/compute-matrix
-                                [x-extent y-extent] #(Math/log (f %1 %2)))))
+      (fn [coll f]
+        (conj coll
+          (mtrx/compute-matrix [x-extent y-extent] #(Math/log (f %1 %2)))))
       []
       [(fn [y x] (+ x 1))
        (fn [y x] (+ y 1))
-       (fn [y x] (- y-extent x))
+       (fn [y x] (- x-extent x))
        (fn [y x] (- y-extent y))])))
+
+(defn soften
+  "Exponentiate matrix."
+  [{n :hardness} matrix]
+  (mtrx/pow matrix n))
+
+(defn lift
+  "A CLI-controlled addition to all points."
+  [{n :lift} matrix]
+  (mtrx/emap #(+ % n) matrix))
 
 (defn unit-scale
   "Normalize all elements of a matrix to unit scale, 0-1.
@@ -88,22 +99,27 @@
   (let [{widest :z-extent precision :precision} options
         width (+ (count (str (int widest))) precision 1)
         template (str "%" width "." precision "f")]
-    (println (format "# Generated with dmote-topography, version %s, settings %s."
-                     (env :dmote-topography-version)
-                     (into (sorted-map) options)))
+    (println (format "# Generated with dmote-topography, version %s. Arguments:"
+                     (env :dmote-topography-version)))
+    (println "#" (string/join " " *command-line-args*))
     (doseq [line matrix]
       (println (string/join " " (map #(format template (double %)) line))))))
 
 (defn make-matrix [options]
-  (->> (straight-normal-distributions options)
+  (->> (multiplied-normal-distributions options)
        (unit-scale)
        (mtrx/add
-         (->> (inverted-normal-distributions options)
+         (->> (additive-normal-distributions options)
               (invert)
               (unit-scale)
               (scale-inverted options)))
        (unit-scale)
-       (mtrx/emul (unit-scale (pillow options)))
+       (lift options)
+       (mtrx/emul
+         (->> (pillow options)
+              (unit-scale)
+              (soften options)))
+       (unit-scale)
        (normalize options)
        (print-matrix options)))
 
@@ -145,6 +161,10 @@
     :default 0.0 :parse-fn #(Float/parseFloat %)]
    [nil "--i-y-sigma N" "σ of inverted 𝒩 on y axis"
     :default 1.0 :parse-fn #(Float/parseFloat %)]
+   [nil "--hardness N" "Hardness of edges"
+    :default 1 :parse-fn #(Float/parseFloat %)]
+   [nil "--lift N" "Extra height added before softening edges"
+    :default 0 :parse-fn #(Float/parseFloat %)]
    ["-p" "--precision N" "Printing precision in final result"
     :default 2 :parse-fn #(Integer/parseInt %)]
    ["-h" "--help"]])

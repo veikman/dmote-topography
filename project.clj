@@ -1,4 +1,4 @@
-(defproject dmote-topography "0.3.0-SNAPSHOT"
+(defproject dmote-topography "0.3.0"
   :description "DMOTE wrist rest topography generator"
   :url "http://viktor.eikman.se/article/the-dmote/"
   :license {:name "GPL"

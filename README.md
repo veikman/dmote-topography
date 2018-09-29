@@ -22,10 +22,6 @@ For help with the parameters, try this, where $ represents your prompt:
 The output goes to your terminal. You will want to redirect it to a
 file. Read the `Makefile` for a Linux-style example.
 
-## Known errors
-
-A lot of sizes produce nothing but NaN.
-
 ## License
 
 Copyright © 2018 Viktor Eikman.
